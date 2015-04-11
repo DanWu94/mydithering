@@ -1,0 +1,16 @@
+#
+# Edit Lock-Stake file. CAUTION: Please do not change.
+#
+# Information about current Edit Lock Owner.
+#
+LockStakeVersion               1.1
+LoginName                      mint4dw2
+HostName                       e-c07kilf1612.it.manchester.ac.uk
+ProcessIdentifier              18488
+ProcessCreationTime_UTC        1428762538
+ProcessCreationTime_Readable   Sat Apr 11 15:28:58 2015 BST
+AppIdentifier                  OA File System Design Manager
+OSType                         unix
+ReasonForPlacingEditLock       OpenAccess edit lock
+FilePathUsedToEditLock         /home/mint4dw2/Cadence/COMP32212/COMP32212/mydithering/functional/netlist.oa.cdslck
+TimeEditLocked                 Sat Apr 11 15:35:07 2015 BST
