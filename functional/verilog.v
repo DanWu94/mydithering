@@ -102,7 +102,23 @@ always@ (posedge clk)
 endmodule
 
 module colourCal( input wire [7:0] colour_now,
-                  output wire [5:0] error,
-                  output wire [2:0] colour_draw);
+                  output reg [5:0] error,
+                  output reg [2:0] colour_draw);
+always@(colour_now)begin
+  if(colour_now[7:5]==3'b111)begin
+    colour_draw = 3'b111;
+    error = {1'b0,colour_now[4:0]};
+  end
+  else begin
+    if(colour_now[4]) begin
+      colour_draw = colour_now[7:5]+1;
+      error = {1'b1,colour_now[4:0]};
+    end
+    else begin
+      colour_draw = colour_now[7:5];
+      error = {1'b0,colour_now[4:0]};
+    end
+  end
+end
 
 endmodule
