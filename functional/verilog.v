@@ -154,5 +154,19 @@ module pipelineCal( input wire [5:0] error,
                     input wire [2:0] multiplex,
                     input wire [8:0] ppl_old,
                     output reg [8:0] ppl_new);
+reg [8:0] ppl_temp;
+always@(*)begin
+  ppl_temp = 9'b0;
+  if(multiplex[0])begin
+    ppl_temp = ppl_temp+{{3{error[5]}},error};
+  end
+  if(multiplex[1])begin
+    ppl_temp = ppl_temp+{{2{error[5]}},error,1'b0};
+  end
+  if(multiplex[2])begin
+    ppl_temp = ppl_temp+{{1{error[5]}},error,2'b0};
+  end
+  ppl_new = ppl_old+ppl_temp;
+end
 
 endmodule
