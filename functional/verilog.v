@@ -106,6 +106,7 @@ always@ (posedge clk)
         for (k = 0; k < 640; k = k + 1) begin
           error_mem[k] = 0;
         end
+        error_next <= 9'b0;
       end
     `BUSY: begin
       #`TPD;
@@ -183,7 +184,18 @@ endmodule
 module colourUpdate(  input wire [8:0] error_next,
                       input wire [5:0] error,
                       input wire [7:0] colour_input,
-                      output wire [7:0] colour_next);
-
+                      output reg [7:0] colour_next);
+reg [8:0] error_temp;
+always@(*) begin
+  error_temp = error_next;
+  error_temp = error_temp+{error,3'b0};
+  error_temp = error_temp+~{{3{error[5]}},error}+1;
+  if(error_temp[3]) begin
+    colour_next = colour_input+{{3{error_temp[8]}},error_temp[8:4]}+1;
+  end
+  else begin
+    colour_next = colour_input+{{3{error_temp[8]}},error_temp[8:4]};
+  end
+end
 
 endmodule
