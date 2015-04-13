@@ -38,6 +38,7 @@ reg [7:0] colour_now;
 reg [19:0] address;
 reg [9:0] error_mem[0:640];
 wire [5:0] error;
+reg [9:0] error_next;
 integer k;
 
 reg [8:0] ppl1;
@@ -116,6 +117,7 @@ always@ (posedge clk)
           ppl2 <= ppl2_toUpdate;
           ppl3 <= ppl3_toUpdate;
           error_mem[x_now-2] <= ppl3;
+          error_next <= error_mem[x_now+2];
           if (x_now == x_end) begin
             y_now <= y_now + 1;
             x_now <= x_start;
