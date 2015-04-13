@@ -115,6 +115,7 @@ always@ (posedge clk)
           ppl1 <= ppl1_toUpdate;
           ppl2 <= ppl2_toUpdate;
           ppl3 <= ppl3_toUpdate;
+          error_mem[x_now-2] <= ppl3;
           if (x_now == x_end) begin
             y_now <= y_now + 1;
             x_now <= x_start;
