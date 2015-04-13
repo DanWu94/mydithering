@@ -35,6 +35,7 @@ reg [15:0] y_end;
 reg [7:0] colour_input;
 wire [2:0] colour_draw;
 reg [7:0] colour_now;
+wire [7:0] colour_next;
 reg [19:0] address;
 reg [9:0] error_mem[0:640];
 wire [5:0] error;
@@ -64,6 +65,10 @@ pipelineCal pplcl3( error,
                     3'd3,
                     ppl2,
                     ppl3_toUpdate);
+colourUpdate clrpdt(error_next,
+                    error,
+                    colour_input,
+                    colour_next);
 
 
 assign busy = (draw_state == `BUSY);
@@ -118,6 +123,7 @@ always@ (posedge clk)
           ppl3 <= ppl3_toUpdate;
           error_mem[x_now-2] <= ppl3;
           error_next <= error_mem[x_now+2];
+          colour_now <= colour_next;
           if (x_now == x_end) begin
             y_now <= y_now + 1;
             x_now <= x_start;
@@ -171,5 +177,13 @@ always@(*)begin
   end
   ppl_new = ppl_old+ppl_temp;
 end
+
+endmodule
+
+module colourUpdate(  input wire [8:0] error_next,
+                      input wire [5:0] error,
+                      input wire [7:0] colour_input,
+                      output wire [7:0] colour_next);
+
 
 endmodule
