@@ -40,9 +40,30 @@ reg [9:0] error_mem[0:640];
 wire [5:0] error;
 integer k;
 
-colourCal clrcl( colour_now,
+reg [8:0] ppl1;
+reg [8:0] ppl2;
+reg [8:0] ppl3;
+wire [8:0] ppl1_toUpdate;
+wire [8:0] ppl2_toUpdate;
+wire [8:0] ppl3_toUpdate;
+
+colourCal clrcl(  colour_now,
                   error,
                   colour_draw);
+
+pipelineCal pplcl1( error,
+                    3'd1,
+                    9'b0,
+                    ppl1_toUpdate);
+pipelineCal pplcl2( error,
+                    3'd5,
+                    ppl1,
+                    ppl2_toUpdate);
+pipelineCal pplcl3( error,
+                    3'd3,
+                    ppl2,
+                    ppl3_toUpdate);
+
 
 assign busy = (draw_state == `BUSY);
 initial draw_state = `IDLE;
@@ -63,31 +84,37 @@ always@ (posedge clk)
   case(draw_state)
     `IDLE:
       if(req) begin
-	      #`TPD;
-	      ack <= 1;
-	      x_start <= r0;
-	      x_now <= r0;
+        #`TPD;
+        ack <= 1;
+        x_start <= r0;
+        x_now <= r0;
         y_now <= r1;
-	      x_end <= r2;
-	      y_end <= r3;
-	      colour_input <= r4[7:0];
-	      colour_now <= r4[7:0];
+        x_end <= r2;
+        y_end <= r3;
+        colour_input <= r4[7:0];
+        colour_now <= r4[7:0];
+        ppl1 <= 9'b0;
+        ppl2 <= 9'b0;
+        ppl3 <= 9'b0;
         draw_state <= `BUSY;
-	      for (k = 0; k < 640; k = k + 1) begin
+        for (k = 0; k < 640; k = k + 1) begin
           error_mem[k] = 0;
         end
-	    end
+      end
     `BUSY: begin
       #`TPD;
       ack <= 0;
       de_req <= 1;
       if(de_ack) begin
-	      if (y_now == y_end + 1) begin
-	        draw_state <= `IDLE;
-	        de_req <= 0;
-	      end
-	      else begin
+        if (y_now == y_end + 1) begin
+          draw_state <= `IDLE;
+          de_req <= 0;
+        end
+        else begin
           address <= x_now + y_now*640;
+          ppl1 <= ppl1_toUpdate;
+          ppl2 <= ppl2_toUpdate;
+          ppl3 <= ppl3_toUpdate;
           if (x_now == x_end) begin
             y_now <= y_now + 1;
             x_now <= x_start;
@@ -120,5 +147,12 @@ always@(colour_now)begin
     end
   end
 end
+
+endmodule
+
+module pipelineCal( input wire [5:0] error,
+                    input wire [2:0] multiplex,
+                    input wire [8:0] ppl_old,
+                    output reg [8:0] ppl_new);
 
 endmodule
