@@ -122,8 +122,27 @@ always@ (posedge clk)
           ppl1 <= ppl1_toUpdate;
           ppl2 <= ppl2_toUpdate;
           ppl3 <= ppl3_toUpdate;
-          error_mem[x_now-2] <= ppl3;
-          error_next <= error_mem[x_now+2];
+          
+          if (x_now == x_start) begin
+            error_mem[x_end-1] <= ppl3;
+          end
+          else if(x_now == x_start+1) begin
+            error_mem[x_end] <= ppl3;
+          end
+          else begin
+            error_mem[x_now-2] <= ppl3;
+          end
+          
+          if (x_now == x_end-1) begin
+            error_next <= error_mem[x_start];
+          end
+          else if (x_now == x_end) begin
+            error_next <= error_mem[x_start+1];
+          end
+          else begin
+            error_next <= error_mem[x_now+2];
+          end
+          
           colour_now <= colour_next;
           if (x_now == x_end) begin
             y_now <= y_now + 1;
