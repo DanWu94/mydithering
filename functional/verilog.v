@@ -23,7 +23,7 @@ module mydithering(   input  wire        clk,
                       output wire [17:0] de_addr,
                       output reg  [3:0] de_nbyte,
                       output wire        de_rnw,
-                      output reg [31:0] de_w_data,
+                      output wire [31:0] de_w_data,
                       input  wire [31:0] de_r_data );
 
 reg draw_state;
@@ -69,7 +69,8 @@ colourUpdate clrpdt(error_next,
                     error,
                     colour_input,
                     colour_next);
-
+assign de_w_data = {colour_draw,5'b0,colour_draw,5'b0,colour_draw,5'b0,colour_draw,5'b0};
+assign de_rnw = 0;
 
 assign busy = (draw_state == `BUSY);
 initial draw_state = `IDLE;
