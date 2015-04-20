@@ -15,7 +15,7 @@ module mydithering(   input  wire        clk,
                       input  wire [15:0] r2,//x_end
                       input  wire [15:0] r3,//y_end
                       input  wire [15:0] r4,//colour_input_rg
-                      input  wire [15:0] r5,//colour_input_b
+                      input  wire [15:0] r5,//colour_input_g
                       input  wire [15:0] r6,
                       input  wire [15:0] r7,
                       output reg        de_req,
@@ -32,16 +32,16 @@ reg [15:0] x_now;
 reg [15:0] y_now;
 reg [15:0] x_end;
 reg [15:0] y_end;
+reg [19:0] address;
+integer k;
+
 reg [7:0] colour_input_r;
 wire [2:0] colour_draw_r;
 reg [7:0] colour_now_r;
 wire [7:0] colour_next_r;
-reg [19:0] address;
 reg [9:0] error_mem_r[0:640];
 wire [5:0] error_r;
 reg [9:0] error_next_r;
-integer k;
-
 reg [8:0] ppl1_r;
 reg [8:0] ppl2_r;
 reg [8:0] ppl3_r;
@@ -49,27 +49,64 @@ wire [8:0] ppl1_toUpdate_r;
 wire [8:0] ppl2_toUpdate_r;
 wire [8:0] ppl3_toUpdate_r;
 
-colourCal clrcl(  colour_now_r,
+colourCal clrcl_r(  colour_now_r,
                   error_r,
                   colour_draw_r);
 
-pipelineCal pplcl1( error_r,
+pipelineCal pplcl1_r( error_r,
                     3'd1,
                     9'b0,
                     ppl1_toUpdate_r);
-pipelineCal pplcl2( error_r,
+pipelineCal pplcl2_r( error_r,
                     3'd5,
                     ppl1_r,
                     ppl2_toUpdate_r);
-pipelineCal pplcl3( error_r,
+pipelineCal pplcl3_r( error_r,
                     3'd3,
                     ppl2_r,
                     ppl3_toUpdate_r);
-colourUpdate clrpdt(error_next_r,
+colourUpdate clrpdt_r(error_next_r,
                     error_r,
                     colour_input_r,
                     colour_next_r);
-assign de_w_data = {colour_draw_r,5'b0,colour_draw_r,5'b0,colour_draw_r,5'b0,colour_draw_r,5'b0};
+
+reg [7:0] colour_input_g;
+wire [2:0] colour_draw_g;
+reg [7:0] colour_now_g;
+wire [7:0] colour_next_g;
+reg [9:0] error_mem_g[0:640];
+wire [5:0] error_g;
+reg [9:0] error_next_g;
+reg [8:0] ppl1_g;
+reg [8:0] ppl2_g;
+reg [8:0] ppl3_g;
+wire [8:0] ppl1_toUpdate_g;
+wire [8:0] ppl2_toUpdate_g;
+wire [8:0] ppl3_toUpdate_g;
+
+colourCal clrcl_g(  colour_now_g,
+                  error_g,
+                  colour_draw_g);
+
+pipelineCal pplcl1_g( error_g,
+                    3'd1,
+                    9'b0,
+                    ppl1_toUpdate_g);
+pipelineCal pplcl2_g( error_g,
+                    3'd5,
+                    ppl1_g,
+                    ppl2_toUpdate_g);
+pipelineCal pplcl3_g( error_g,
+                    3'd3,
+                    ppl2_g,
+                    ppl3_toUpdate_g);
+colourUpdate clrpdt_g(error_next_g,
+                    error_g,
+                    colour_input_g,
+                    colour_next_g);
+
+
+assign de_w_data = {colour_draw_r,colour_draw_g,2'b0,colour_draw_r,colour_draw_g,2'b0,colour_draw_r,colour_draw_g,2'b0,colour_draw_r,colour_draw_g,2'b0};
 assign de_rnw = 0;
 
 assign busy = (draw_state == `BUSY);
@@ -98,16 +135,28 @@ always@ (posedge clk)
         y_now <= r1;
         x_end <= r2;
         y_end <= r3;
-        colour_input_r <= r4[7:0];
-        colour_now_r <= r4[7:0];
+        
+        colour_input_r <= r4[15:8];
+        colour_now_r <= r4[15:8];
         ppl1_r <= 9'b0;
         ppl2_r <= 9'b0;
         ppl3_r <= 9'b0;
-        draw_state <= `BUSY;
         for (k = 0; k < 640; k = k + 1) begin
           error_mem_r[k] = 0;
         end
         error_next_r <= 9'b0;
+
+        colour_input_g <= r4[7:0];
+        colour_now_g <= r4[7:0];
+        ppl1_g <= 9'b0;
+        ppl2_g <= 9'b0;
+        ppl3_g <= 9'b0;
+        for (k = 0; k < 640; k = k + 1) begin
+          error_mem_g[k] = 0;
+        end
+        error_next_g <= 9'b0;
+
+        draw_state <= `BUSY;
       end
     `BUSY: begin
       #`TPD;
@@ -120,31 +169,44 @@ always@ (posedge clk)
         end
         else begin
           address <= x_now + y_now*640;
+          
           ppl1_r <= ppl1_toUpdate_r;
           ppl2_r <= ppl2_toUpdate_r;
           ppl3_r <= ppl3_toUpdate_r;
+
+          ppl1_g <= ppl1_toUpdate_g;
+          ppl2_g <= ppl2_toUpdate_g;
+          ppl3_g <= ppl3_toUpdate_g;
           
           if (x_now == x_start) begin
             error_mem_r[x_end-1] <= ppl3_r;
+            error_mem_g[x_end-1] <= ppl3_g;
           end
           else if(x_now == x_start+1) begin
             error_mem_r[x_end] <= ppl3_r;
+            error_mem_g[x_end] <= ppl3_g;
           end
           else begin
             error_mem_r[x_now-2] <= ppl3_r;
+            error_mem_g[x_now-2] <= ppl3_g;
           end
           
           if (x_now == x_end-1) begin
             error_next_r <= error_mem_r[x_start];
+            error_next_g <= error_mem_g[x_start];
           end
           else if (x_now == x_end) begin
             error_next_r <= error_mem_r[x_start+1];
+            error_next_g <= error_mem_g[x_start+1];
           end
           else begin
             error_next_r <= error_mem_r[x_now+2];
+            error_next_g <= error_mem_g[x_now+2];
           end
           
           colour_now_r <= colour_next_r;
+          colour_now_g <= colour_next_g;
+          
           if (x_now == x_end) begin
             y_now <= y_now + 1;
             x_now <= x_start;
