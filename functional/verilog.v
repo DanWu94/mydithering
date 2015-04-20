@@ -10,12 +10,12 @@ module mydithering(   input  wire        clk,
                       input  wire        req,
                       output reg         ack,
                       output wire        busy,
-                      input  wire [15:0] r0,
-                      input  wire [15:0] r1,
-                      input  wire [15:0] r2,
-                      input  wire [15:0] r3,
-                      input  wire [15:0] r4,
-                      input  wire [15:0] r5,
+                      input  wire [15:0] r0,//x_start
+                      input  wire [15:0] r1,//y_start
+                      input  wire [15:0] r2,//x_end
+                      input  wire [15:0] r3,//y_end
+                      input  wire [15:0] r4,//colour_input_rg
+                      input  wire [15:0] r5,//colour_input_b
                       input  wire [15:0] r6,
                       input  wire [15:0] r7,
                       output reg        de_req,
@@ -32,44 +32,44 @@ reg [15:0] x_now;
 reg [15:0] y_now;
 reg [15:0] x_end;
 reg [15:0] y_end;
-reg [7:0] colour_input;
-wire [2:0] colour_draw;
-reg [7:0] colour_now;
-wire [7:0] colour_next;
+reg [7:0] colour_input_r;
+wire [2:0] colour_draw_r;
+reg [7:0] colour_now_r;
+wire [7:0] colour_next_r;
 reg [19:0] address;
-reg [9:0] error_mem[0:640];
-wire [5:0] error;
-reg [9:0] error_next;
+reg [9:0] error_mem_r[0:640];
+wire [5:0] error_r;
+reg [9:0] error_next_r;
 integer k;
 
-reg [8:0] ppl1;
-reg [8:0] ppl2;
-reg [8:0] ppl3;
-wire [8:0] ppl1_toUpdate;
-wire [8:0] ppl2_toUpdate;
-wire [8:0] ppl3_toUpdate;
+reg [8:0] ppl1_r;
+reg [8:0] ppl2_r;
+reg [8:0] ppl3_r;
+wire [8:0] ppl1_toUpdate_r;
+wire [8:0] ppl2_toUpdate_r;
+wire [8:0] ppl3_toUpdate_r;
 
-colourCal clrcl(  colour_now,
-                  error,
-                  colour_draw);
+colourCal clrcl(  colour_now_r,
+                  error_r,
+                  colour_draw_r);
 
-pipelineCal pplcl1( error,
+pipelineCal pplcl1( error_r,
                     3'd1,
                     9'b0,
-                    ppl1_toUpdate);
-pipelineCal pplcl2( error,
+                    ppl1_toUpdate_r);
+pipelineCal pplcl2( error_r,
                     3'd5,
-                    ppl1,
-                    ppl2_toUpdate);
-pipelineCal pplcl3( error,
+                    ppl1_r,
+                    ppl2_toUpdate_r);
+pipelineCal pplcl3( error_r,
                     3'd3,
-                    ppl2,
-                    ppl3_toUpdate);
-colourUpdate clrpdt(error_next,
-                    error,
-                    colour_input,
-                    colour_next);
-assign de_w_data = {colour_draw,5'b0,colour_draw,5'b0,colour_draw,5'b0,colour_draw,5'b0};
+                    ppl2_r,
+                    ppl3_toUpdate_r);
+colourUpdate clrpdt(error_next_r,
+                    error_r,
+                    colour_input_r,
+                    colour_next_r);
+assign de_w_data = {colour_draw_r,5'b0,colour_draw_r,5'b0,colour_draw_r,5'b0,colour_draw_r,5'b0};
 assign de_rnw = 0;
 
 assign busy = (draw_state == `BUSY);
@@ -98,16 +98,16 @@ always@ (posedge clk)
         y_now <= r1;
         x_end <= r2;
         y_end <= r3;
-        colour_input <= r4[7:0];
-        colour_now <= r4[7:0];
-        ppl1 <= 9'b0;
-        ppl2 <= 9'b0;
-        ppl3 <= 9'b0;
+        colour_input_r <= r4[7:0];
+        colour_now_r <= r4[7:0];
+        ppl1_r <= 9'b0;
+        ppl2_r <= 9'b0;
+        ppl3_r <= 9'b0;
         draw_state <= `BUSY;
         for (k = 0; k < 640; k = k + 1) begin
-          error_mem[k] = 0;
+          error_mem_r[k] = 0;
         end
-        error_next <= 9'b0;
+        error_next_r <= 9'b0;
       end
     `BUSY: begin
       #`TPD;
@@ -120,31 +120,31 @@ always@ (posedge clk)
         end
         else begin
           address <= x_now + y_now*640;
-          ppl1 <= ppl1_toUpdate;
-          ppl2 <= ppl2_toUpdate;
-          ppl3 <= ppl3_toUpdate;
+          ppl1_r <= ppl1_toUpdate_r;
+          ppl2_r <= ppl2_toUpdate_r;
+          ppl3_r <= ppl3_toUpdate_r;
           
           if (x_now == x_start) begin
-            error_mem[x_end-1] <= ppl3;
+            error_mem_r[x_end-1] <= ppl3_r;
           end
           else if(x_now == x_start+1) begin
-            error_mem[x_end] <= ppl3;
+            error_mem_r[x_end] <= ppl3_r;
           end
           else begin
-            error_mem[x_now-2] <= ppl3;
+            error_mem_r[x_now-2] <= ppl3_r;
           end
           
           if (x_now == x_end-1) begin
-            error_next <= error_mem[x_start];
+            error_next_r <= error_mem_r[x_start];
           end
           else if (x_now == x_end) begin
-            error_next <= error_mem[x_start+1];
+            error_next_r <= error_mem_r[x_start+1];
           end
           else begin
-            error_next <= error_mem[x_now+2];
+            error_next_r <= error_mem_r[x_now+2];
           end
           
-          colour_now <= colour_next;
+          colour_now_r <= colour_next_r;
           if (x_now == x_end) begin
             y_now <= y_now + 1;
             x_now <= x_start;
