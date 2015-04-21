@@ -15,7 +15,7 @@ module mydithering(   input  wire        clk,
                       input  wire [15:0] r2,//x_end
                       input  wire [15:0] r3,//y_end
                       input  wire [15:0] r4,//colour_input_rg
-                      input  wire [15:0] r5,//colour_input_g
+                      input  wire [15:0] r5,//colour_input_b
                       input  wire [15:0] r6,
                       input  wire [15:0] r7,
                       output reg        de_req,
@@ -105,8 +105,43 @@ colourUpdate clrpdt_g(error_next_g,
                     colour_input_g,
                     colour_next_g);
 
+reg [7:0] colour_input_b;
+wire [2:0] colour_draw_b;
+reg [7:0] colour_now_b;
+wire [7:0] colour_next_b;
+reg [9:0] error_mem_b[0:640];
+wire [5:0] error_b;
+reg [9:0] error_next_b;
+reg [8:0] ppl1_b;
+reg [8:0] ppl2_b;
+reg [8:0] ppl3_b;
+wire [8:0] ppl1_toUpdate_b;
+wire [8:0] ppl2_toUpdate_b;
+wire [8:0] ppl3_toUpdate_b;
 
-assign de_w_data = {colour_draw_r,colour_draw_g,2'b0,colour_draw_r,colour_draw_g,2'b0,colour_draw_r,colour_draw_g,2'b0,colour_draw_r,colour_draw_g,2'b0};
+colourCal clrcl_b(  colour_now_b,
+                  error_b,
+                  colour_draw_b);
+
+pipelineCal pplcl1_b( error_b,
+                    3'd1,
+                    9'b0,
+                    ppl1_toUpdate_b);
+pipelineCal pplcl2_b( error_b,
+                    3'd5,
+                    ppl1_b,
+                    ppl2_toUpdate_b);
+pipelineCal pplcl3_b( error_b,
+                    3'd3,
+                    ppl2_b,
+                    ppl3_toUpdate_b);
+colourUpdate clrpdt_b(error_next_b,
+                    error_b,
+                    colour_input_b,
+                    colour_next_b);
+
+
+assign de_w_data = {colour_draw_r,colour_draw_g,colour_draw_b[2:1],colour_draw_r,colour_draw_g,colour_draw_b[2:1],colour_draw_r,colour_draw_g,colour_draw_b[2:1],colour_draw_r,colour_draw_g,colour_draw_b[2:1]};
 assign de_rnw = 0;
 
 assign busy = (draw_state == `BUSY);
@@ -156,6 +191,16 @@ always@ (posedge clk)
         end
         error_next_g <= 9'b0;
 
+        colour_input_b <= r5[15:8];
+        colour_now_b <= r5[15:8];
+        ppl1_b <= 9'b0;
+        ppl2_b <= 9'b0;
+        ppl3_b <= 9'b0;
+        for (k = 0; k < 640; k = k + 1) begin
+          error_mem_b[k] = 0;
+        end
+        error_next_b <= 9'b0;
+
         draw_state <= `BUSY;
       end
     `BUSY: begin
@@ -177,35 +222,46 @@ always@ (posedge clk)
           ppl1_g <= ppl1_toUpdate_g;
           ppl2_g <= ppl2_toUpdate_g;
           ppl3_g <= ppl3_toUpdate_g;
+
+          ppl1_b <= ppl1_toUpdate_b;
+          ppl2_b <= ppl2_toUpdate_b;
+          ppl3_b <= ppl3_toUpdate_b;
           
           if (x_now == x_start) begin
             error_mem_r[x_end-1] <= ppl3_r;
             error_mem_g[x_end-1] <= ppl3_g;
+            error_mem_b[x_end-1] <= ppl3_b;
           end
           else if(x_now == x_start+1) begin
             error_mem_r[x_end] <= ppl3_r;
             error_mem_g[x_end] <= ppl3_g;
+            error_mem_b[x_end] <= ppl3_b;
           end
           else begin
             error_mem_r[x_now-2] <= ppl3_r;
             error_mem_g[x_now-2] <= ppl3_g;
+            error_mem_b[x_now-2] <= ppl3_b;
           end
           
           if (x_now == x_end-1) begin
             error_next_r <= error_mem_r[x_start];
             error_next_g <= error_mem_g[x_start];
+            error_next_b <= error_mem_b[x_start];
           end
           else if (x_now == x_end) begin
             error_next_r <= error_mem_r[x_start+1];
             error_next_g <= error_mem_g[x_start+1];
+            error_next_b <= error_mem_b[x_start+1];
           end
           else begin
             error_next_r <= error_mem_r[x_now+2];
             error_next_g <= error_mem_g[x_now+2];
+            error_next_b <= error_mem_b[x_now+2];
           end
           
           colour_now_r <= colour_next_r;
           colour_now_g <= colour_next_g;
+          colour_now_b <= colour_next_b;
           
           if (x_now == x_end) begin
             y_now <= y_now + 1;
