@@ -39,9 +39,9 @@ reg [7:0] colour_input_r;
 wire [2:0] colour_draw_r;
 reg [7:0] colour_now_r;
 wire [7:0] colour_next_r;
-reg [9:0] error_mem_r[0:640];
+reg [8:0] error_mem_r[0:640];
 wire [5:0] error_r;
-reg [9:0] error_next_r;
+reg [8:0] error_next_r;
 reg [8:0] ppl1_r;
 reg [8:0] ppl2_r;
 reg [8:0] ppl3_r;
@@ -74,9 +74,9 @@ reg [7:0] colour_input_g;
 wire [2:0] colour_draw_g;
 reg [7:0] colour_now_g;
 wire [7:0] colour_next_g;
-reg [9:0] error_mem_g[0:640];
+reg [8:0] error_mem_g[0:640];
 wire [5:0] error_g;
-reg [9:0] error_next_g;
+reg [8:0] error_next_g;
 reg [8:0] ppl1_g;
 reg [8:0] ppl2_g;
 reg [8:0] ppl3_g;
@@ -109,9 +109,9 @@ reg [7:0] colour_input_b;
 wire [2:0] colour_draw_b;
 reg [7:0] colour_now_b;
 wire [7:0] colour_next_b;
-reg [9:0] error_mem_b[0:640];
+reg [8:0] error_mem_b[0:640];
 wire [5:0] error_b;
-reg [9:0] error_next_b;
+reg [8:0] error_next_b;
 reg [8:0] ppl1_b;
 reg [8:0] ppl2_b;
 reg [8:0] ppl3_b;
@@ -141,7 +141,7 @@ colourUpdate clrpdt_b(error_next_b,
                     colour_next_b);
 
 
-assign de_w_data = {colour_draw_r,colour_draw_g,colour_draw_b[2:1],colour_draw_r,colour_draw_g,colour_draw_b[2:1],colour_draw_r,colour_draw_g,colour_draw_b[2:1],colour_draw_r,colour_draw_g,colour_draw_b[2:1]};
+assign de_w_data = {4{colour_draw_r,colour_draw_g,colour_draw_b[2:1]}};
 assign de_rnw = 0;
 
 assign busy = (draw_state == `BUSY);
