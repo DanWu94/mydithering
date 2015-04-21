@@ -106,42 +106,42 @@ colourUpdate clrpdt_g(error_next_g,
                     colour_next_g);
 
 reg [7:0] colour_input_b;
-wire [2:0] colour_draw_b;
+wire [1:0] colour_draw_b;
 reg [7:0] colour_now_b;
 wire [7:0] colour_next_b;
-reg [8:0] error_mem_b[0:640];
-wire [5:0] error_b;
-reg [8:0] error_next_b;
-reg [8:0] ppl1_b;
-reg [8:0] ppl2_b;
-reg [8:0] ppl3_b;
-wire [8:0] ppl1_toUpdate_b;
-wire [8:0] ppl2_toUpdate_b;
-wire [8:0] ppl3_toUpdate_b;
+reg [9:0] error_mem_b[0:640];
+wire [6:0] error_b;
+reg [9:0] error_next_b;
+reg [9:0] ppl1_b;
+reg [9:0] ppl2_b;
+reg [9:0] ppl3_b;
+wire [9:0] ppl1_toUpdate_b;
+wire [9:0] ppl2_toUpdate_b;
+wire [9:0] ppl3_toUpdate_b;
 
-colourCal clrcl_b(  colour_now_b,
+colourCal_b clrcl_b(  colour_now_b,
                   error_b,
                   colour_draw_b);
 
-pipelineCal pplcl1_b( error_b,
+pipelineCal_b pplcl1_b( error_b,
                     3'd1,
                     9'b0,
                     ppl1_toUpdate_b);
-pipelineCal pplcl2_b( error_b,
+pipelineCal_b pplcl2_b( error_b,
                     3'd5,
                     ppl1_b,
                     ppl2_toUpdate_b);
-pipelineCal pplcl3_b( error_b,
+pipelineCal_b pplcl3_b( error_b,
                     3'd3,
                     ppl2_b,
                     ppl3_toUpdate_b);
-colourUpdate clrpdt_b(error_next_b,
+colourUpdate_b clrpdt_b(error_next_b,
                     error_b,
                     colour_input_b,
                     colour_next_b);
 
 
-assign de_w_data = {4{colour_draw_r,colour_draw_g,colour_draw_b[2:1]}};
+assign de_w_data = {4{colour_draw_r,colour_draw_g,colour_draw_b}};
 assign de_rnw = 0;
 
 assign busy = (draw_state == `BUSY);
@@ -193,13 +193,13 @@ always@ (posedge clk)
 
         colour_input_b <= r5[15:8];
         colour_now_b <= r5[15:8];
-        ppl1_b <= 9'b0;
-        ppl2_b <= 9'b0;
-        ppl3_b <= 9'b0;
+        ppl1_b <= 10'b0;
+        ppl2_b <= 10'b0;
+        ppl3_b <= 10'b0;
         for (k = 0; k < 640; k = k + 1) begin
           error_mem_b[k] = 0;
         end
-        error_next_b <= 9'b0;
+        error_next_b <= 10'b0;
 
         draw_state <= `BUSY;
       end
@@ -298,6 +298,28 @@ end
 
 endmodule
 
+module colourCal_b( input wire [7:0] colour_now,
+                  output reg [6:0] error,
+                  output reg [1:0] colour_draw);
+always@(colour_now)begin
+  if(colour_now[7:6]==2'b11)begin
+    colour_draw = 2'b11;
+    error = {1'b0,colour_now[5:0]};
+  end
+  else begin
+    if(colour_now[5]) begin
+      colour_draw = colour_now[7:6]+1;
+      error = {1'b1,colour_now[5:0]};
+    end
+    else begin
+      colour_draw = colour_now[7:6];
+      error = {1'b0,colour_now[5:0]};
+    end
+  end
+end
+
+endmodule
+
 module pipelineCal( input wire [5:0] error,
                     input wire [2:0] multiplex,
                     input wire [8:0] ppl_old,
@@ -319,6 +341,27 @@ end
 
 endmodule
 
+module pipelineCal_b( input wire [6:0] error,
+                    input wire [1:0] multiplex,
+                    input wire [9:0] ppl_old,
+                    output reg [9:0] ppl_new);
+reg [9:0] ppl_temp;
+always@(*)begin
+  ppl_temp = 10'b0;
+  if(multiplex[0])begin
+    ppl_temp = ppl_temp+{{3{error[6]}},error};
+  end
+  if(multiplex[1])begin
+    ppl_temp = ppl_temp+{{2{error[6]}},error,1'b0};
+  end
+  if(multiplex[2])begin
+    ppl_temp = ppl_temp+{{1{error[6]}},error,2'b0};
+  end
+  ppl_new = ppl_old+ppl_temp;
+end
+
+endmodule
+
 module colourUpdate(  input wire [8:0] error_next,
                       input wire [5:0] error,
                       input wire [7:0] colour_input,
@@ -333,6 +376,25 @@ always@(*) begin
   end
   else begin
     colour_next = colour_input+{{3{error_temp[8]}},error_temp[8:4]};
+  end
+end
+
+endmodule
+
+module colourUpdate_b(  input wire [9:0] error_next,
+                      input wire [6:0] error,
+                      input wire [7:0] colour_input,
+                      output reg [7:0] colour_next);
+reg [9:0] error_temp;
+always@(*) begin
+  error_temp = error_next;
+  error_temp = error_temp+{error,3'b0};
+  error_temp = error_temp+~{{3{error[6]}},error}+1;
+  if(error_temp[4]) begin
+    colour_next = colour_input+{{3{error_temp[9]}},error_temp[9:5]}+1;
+  end
+  else begin
+    colour_next = colour_input+{{3{error_temp[9]}},error_temp[9:5]};
   end
 end
 
