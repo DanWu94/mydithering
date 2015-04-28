@@ -342,7 +342,7 @@ end
 endmodule
 
 module pipelineCal_b( input wire [6:0] error,
-                    input wire [1:0] multiplex,
+                    input wire [2:0] multiplex,
                     input wire [9:0] ppl_old,
                     output reg [9:0] ppl_new);
 reg [9:0] ppl_temp;
