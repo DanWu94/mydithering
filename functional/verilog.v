@@ -185,27 +185,18 @@ always@ (posedge clk)
         ppl1_r <= 9'b0;
         ppl2_r <= 9'b0;
         ppl3_r <= 9'b0;
-        for (k = 0; k < 640; k = k + 1) begin
-          error_mem_r[k] = 0;
-        end
 
         colour_input_g <= r4[7:0];
         colour_now_g <= r4[7:0];
         ppl1_g <= 9'b0;
         ppl2_g <= 9'b0;
         ppl3_g <= 9'b0;
-        for (k = 0; k < 640; k = k + 1) begin
-          error_mem_g[k] = 0;
-        end
 
         colour_input_b <= r5[15:8];
         colour_now_b <= r5[15:8];
         ppl1_b <= 10'b0;
         ppl2_b <= 10'b0;
         ppl3_b <= 10'b0;
-        for (k = 0; k < 640; k = k + 1) begin
-          error_mem_b[k] = 0;
-        end
 
         first_row <= 1;
         draw_state <= `BUSY;
