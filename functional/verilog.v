@@ -282,6 +282,20 @@ always@ (posedge clk)
     end
   endcase
 
+always@ (posedge clk) begin
+  error_mem_out_r <= error_mem_r[addr_rd];
+  error_mem_r[addr_wr] <= ppl3_r;
+end
+
+always@ (posedge clk) begin
+  error_mem_out_g <= error_mem_g[addr_rd];
+  error_mem_g[addr_wr] <= ppl3_g;
+end
+
+always@ (posedge clk) begin
+  error_mem_out_b <= error_mem_b[addr_rd];
+  error_mem_b[addr_wr] <= ppl3_b;
+end
 endmodule
 
 module colourCal( input wire [7:0] colour_now,
