@@ -188,7 +188,6 @@ always@ (posedge clk)
         for (k = 0; k < 640; k = k + 1) begin
           error_mem_r[k] = 0;
         end
-        error_next_r <= 9'b0;
 
         colour_input_g <= r4[7:0];
         colour_now_g <= r4[7:0];
@@ -198,7 +197,6 @@ always@ (posedge clk)
         for (k = 0; k < 640; k = k + 1) begin
           error_mem_g[k] = 0;
         end
-        error_next_g <= 9'b0;
 
         colour_input_b <= r5[15:8];
         colour_now_b <= r5[15:8];
@@ -208,8 +206,8 @@ always@ (posedge clk)
         for (k = 0; k < 640; k = k + 1) begin
           error_mem_b[k] = 0;
         end
-        error_next_b <= 10'b0;
 
+        first_row <= 1;
         draw_state <= `BUSY;
       end
     `BUSY: begin
@@ -263,6 +261,7 @@ always@ (posedge clk)
           if (x_now == x_end) begin
             y_now <= y_now + 1;
             x_now <= x_start;
+            first_row <= 0;
           end
           else begin
             x_now <= x_now + 1;
