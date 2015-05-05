@@ -36,7 +36,6 @@ reg [19:0] address;
 reg [15:0] addr_rd;
 reg [15:0] addr_wr;
 reg first_row;
-integer k;
 
 reg [7:0] colour_input_r;
 wire [2:0] colour_draw_r;
