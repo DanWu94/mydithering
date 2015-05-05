@@ -33,6 +33,8 @@ reg [15:0] y_now;
 reg [15:0] x_end;
 reg [15:0] y_end;
 reg [19:0] address;
+reg [15:0] addr_rd;
+reg [15:0] addr_wr;
 reg first_row;
 integer k;
 
@@ -235,35 +237,23 @@ always@ (posedge clk)
           ppl3_b <= ppl3_toUpdate_b;
           
           if (x_now == x_start) begin
-            error_mem_r[x_end-1] <= ppl3_r;
-            error_mem_g[x_end-1] <= ppl3_g;
-            error_mem_b[x_end-1] <= ppl3_b;
+            addr_wr <= x_end-1;
           end
           else if(x_now == x_start+1) begin
-            error_mem_r[x_end] <= ppl3_r;
-            error_mem_g[x_end] <= ppl3_g;
-            error_mem_b[x_end] <= ppl3_b;
+            addr_wr <= x_end;
           end
           else begin
-            error_mem_r[x_now-2] <= ppl3_r;
-            error_mem_g[x_now-2] <= ppl3_g;
-            error_mem_b[x_now-2] <= ppl3_b;
+            addr_wr <= x_now-2;
           end
           
           if (x_now == x_end-1) begin
-            error_next_r <= error_mem_r[x_start];
-            error_next_g <= error_mem_g[x_start];
-            error_next_b <= error_mem_b[x_start];
+            addr_rd <= x_start;
           end
           else if (x_now == x_end) begin
-            error_next_r <= error_mem_r[x_start+1];
-            error_next_g <= error_mem_g[x_start+1];
-            error_next_b <= error_mem_b[x_start+1];
+            addr_rd <= x_start+1;
           end
           else begin
-            error_next_r <= error_mem_r[x_now+2];
-            error_next_g <= error_mem_g[x_now+2];
-            error_next_b <= error_mem_b[x_now+2];
+            addr_rd <= x_now+2;
           end
           
           colour_now_r <= colour_next_r;
