@@ -33,6 +33,7 @@ reg [15:0] y_now;
 reg [15:0] x_end;
 reg [15:0] y_end;
 reg [19:0] address;
+reg first_row;
 integer k;
 
 reg [7:0] colour_input_r;
@@ -41,7 +42,8 @@ reg [7:0] colour_now_r;
 wire [7:0] colour_next_r;
 reg [8:0] error_mem_r[0:640];
 wire [5:0] error_r;
-reg [8:0] error_next_r;
+wire [8:0] error_next_r;
+reg [8:0] error_mem_out_r;
 reg [8:0] ppl1_r;
 reg [8:0] ppl2_r;
 reg [8:0] ppl3_r;
@@ -69,6 +71,7 @@ colourUpdate clrpdt_r(error_next_r,
                     error_r,
                     colour_input_r,
                     colour_next_r);
+assign error_next_r = error_mem_out_r & {9{~first_row}};
 
 reg [7:0] colour_input_g;
 wire [2:0] colour_draw_g;
@@ -76,7 +79,8 @@ reg [7:0] colour_now_g;
 wire [7:0] colour_next_g;
 reg [8:0] error_mem_g[0:640];
 wire [5:0] error_g;
-reg [8:0] error_next_g;
+wire [8:0] error_next_g;
+reg [8:0] error_mem_out_g;
 reg [8:0] ppl1_g;
 reg [8:0] ppl2_g;
 reg [8:0] ppl3_g;
@@ -104,6 +108,7 @@ colourUpdate clrpdt_g(error_next_g,
                     error_g,
                     colour_input_g,
                     colour_next_g);
+assign error_next_g = error_mem_out_g & {9{~first_row}};
 
 reg [7:0] colour_input_b;
 wire [1:0] colour_draw_b;
@@ -111,7 +116,8 @@ reg [7:0] colour_now_b;
 wire [7:0] colour_next_b;
 reg [9:0] error_mem_b[0:640];
 wire [6:0] error_b;
-reg [9:0] error_next_b;
+wire [9:0] error_next_b;
+reg [9:0] error_mem_out_b;
 reg [9:0] ppl1_b;
 reg [9:0] ppl2_b;
 reg [9:0] ppl3_b;
@@ -139,6 +145,7 @@ colourUpdate_b clrpdt_b(error_next_b,
                     error_b,
                     colour_input_b,
                     colour_next_b);
+assign error_next_b = error_mem_out_b & {10{~first_row}};
 
 
 assign de_w_data = {4{colour_draw_r,colour_draw_g,colour_draw_b}};
@@ -274,6 +281,7 @@ always@ (posedge clk)
       end
     end
   endcase
+
 endmodule
 
 module colourCal( input wire [7:0] colour_now,
